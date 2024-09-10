@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiger Tap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #FF6600;
+        }
+        .tab-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .tab-container button {
+            padding: 10px;
+            border: none;
+            background-color: #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .tab-container button.active {
+            background-color: #FF6600;
+            color: white;
+        }
+        .content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background-color: #FF6600;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tiger Tap</h1>
+        <h2>Earn. Flex. Repeat. 💰🐅</h2>
+        
+        <div class="tab-container" id="tabContainer">
+            <button onclick="showTab('farming')">Farming</button>
+            <button onclick="showTab('tasks')">Tasks</button>
+            <button onclick="showTab('buddy')">Buddy</button>
+            <button onclick="showTab('leaderboard')">Leaderboard</button>
+            <button onclick="showTab('profile')">Profile</button>
+        </div>
+        
+        <div id="content" class="content">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        let user = JSON.parse(localStorage.getItem('user')) || {
+            points: 0,
+            name: 'Player',
+            lastFarmed: 0,
+            completedTasks: [],
+            referrals: 0
+        };
+
+        function saveUser() {
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-container button');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const content = document.getElementById('content');
+            switch(tabName) {
+                case 'farming':
+                    content.innerHTML = `
+                        <h3>Farming</h3>
+                        <p>Your current points: <span id="points">${user.points}</span></p>
+                        <button class="btn" onclick="farm()">Farm Points</button>
+                    `;
+                    break;
+                case 'tasks':
+                    const tasks = [
+                        {id: 'daily', name: 'Daily Login', reward: 100},
+                        {id: 'share', name: 'Share on Social Media', reward: 200},
+                        {id: 'survey', name: 'Complete a Survey', reward: 300}
+                    ];
+                    content.innerHTML = '<h3>Tasks</h3>' + tasks.map(task => `
+                        <div class="task-item">
+                            <span>${task.name}: ${task.reward} points</span>
+                            <button class="btn" onclick="completeTask('${task.id}', ${task.reward})" 
+                                    ${user.completedTasks.includes(task.id) ? 'disabled' : ''}>
+                                ${user.completedTasks.includes(task.id) ? 'Completed' : 'Complete'}
+                            </button>
+                        </div>
+                    `).join('');
+                    break;
+                case 'buddy':
+                    content.innerHTML = `
+                        <h3>Buddy</h3>
+                        <p>Your referral code: ${user.name}${user.points}</p>
+                        <p>Referrals: ${user.referrals}</p>
+                        <button class="btn" onclick="refer()">Refer a Friend</button>
+                    `;
+                    break;
+                case 'leaderboard':
+                    content.innerHTML = '<h3>Leaderboard</h3><p>Coming soon...</p>';
+                    break;
+                case 'profile':
+                    content.innerHTML = `
+                        <h3>Profile</h3>
+                        <p>Name: ${user.name}</p>
+                        <p>Total Points: ${user.points}</p>
+                        <p>Referrals: ${user.referrals}</p>
+                        <button class="btn" onclick="changeName()">Change Name</button>
+                    `;
+                    break;
+            }
+        }
+
+        function farm() {
+            const now = Date.now();
+            if (now - user.lastFarmed > 5000) { // 5 seconds cooldown
+                user.points += 10;
+                user.lastFarmed = now;
+                saveUser();
+                document.getElementById('points').textContent = user.points;
+            } else {
+                alert('Please wait before farming again!');
+            }
+        }
+
+        function completeTask(taskId, reward) {
+            if (!user.completedTasks.includes(taskId)) {
+                user.points += reward;
+                user.completedTasks.push(taskId);
+                saveUser();
+                showTab('tasks');
+            }
+        }
+
+        function refer() {
+            user.referrals++;
+            user.points += 500; // Bonus for referral
+            saveUser();
+            alert('Friend referred! You earned 500 points!');
+            showTab('buddy');
+        }
+
+        function changeName() {
+            const newName = prompt('Enter your new name:');
+            if (newName) {
+                user.name = newName;
+                saveUser();
+                showTab('profile');
+            }
+        }
+
+        // Show farming tab by default
+        showTab('farming');
+    </script>
+</body>
+</html>
